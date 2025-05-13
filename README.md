@@ -17,3 +17,4 @@ It’s a quick way to edit and navigate code. It's especially useful if you want
 Tamer
 
 Dev üzerinde TEVD dalında README tamer 2
+tamer3
