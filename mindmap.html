@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Link Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 20px;
+        }
+        .link-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+            position: relative;
+        }
+        .link-item img {
+            max-width: 100%;
+            height: auto;
+            cursor: pointer;
+        }
+        .link-item .edit {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="linkContainer"></div>
+
+    <!-- Modal for editing links -->
+    <div id="editModal" class="hidden">
+        <div style="background: white; padding: 20px; border: 1px solid #ccc; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000;">
+            <h3>Edit Link</h3>
+            <label for="linkUrl">URL:</label>
+            <input type="text" id="linkUrl" style="width: 100%; margin-bottom: 10px;">
+            <label for="linkImage">Image URL:</label>
+            <input type="text" id="linkImage" style="width: 100%; margin-bottom: 10px;">
+            <button id="saveLink">Save</button>
+            <button id="cancelEdit">Cancel</button>
+        </div>
+    </div>
+    <div id="overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;"></div>
+
+    <script>
+        const links = Array.from({ length: 99 }, (_, i) => ({
+            id: i + 1,
+            url: `https://example.com/link${i + 1}`,
+            image: ''
+        }));
+
+        const container = document.getElementById('linkContainer');
+        const editModal = document.getElementById('editModal');
+        const overlay = document.getElementById('overlay');
+        const linkUrlInput = document.getElementById('linkUrl');
+        const linkImageInput = document.getElementById('linkImage');
+        const saveLinkButton = document.getElementById('saveLink');
+        const cancelEditButton = document.getElementById('cancelEdit');
+
+        let currentEditId = null;
+
+        function renderLinks() {
+            container.innerHTML = '';
+            links.forEach(link => {
+                const item = document.createElement('div');
+                item.className = 'link-item';
+                item.innerHTML = `
+                    ${link.image ? `<img src="${link.image}" alt="Link Image" data-id="${link.id}">` : ''}
+                    <a href="${link.url}" target="_blank">${link.url}</a>
+                    <button class="edit" data-id="${link.id}">Edit</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function openEditModal(id) {
+            currentEditId = id;
+            const link = links.find(l => l.id === id);
+            linkUrlInput.value = link.url;
+            linkImageInput.value = link.image;
+            editModal.classList.remove('hidden');
+            overlay.classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            editModal.classList.add('hidden');
+            overlay.classList.add('hidden');
+            currentEditId = null;
+        }
+
+        container.addEventListener('click', (e) => {
+            if (e.target.classList.contains('edit')) {
+                const id = parseInt(e.target.dataset.id, 10);
+                openEditModal(id);
+            } else if (e.target.tagName === 'IMG') {
+                const id = parseInt(e.target.dataset.id, 10);
+                const link = links.find(l => l.id === id);
+                window.open(link.url, '_blank');
+            }
+        });
+
+        saveLinkButton.addEventListener('click', () => {
+            const link = links.find(l => l.id === currentEditId);
+            link.url = linkUrlInput.value;
+            link.image = linkImageInput.value;
+            renderLinks();
+            closeEditModal();
+        });
+
+        cancelEditButton.addEventListener('click', closeEditModal);
+        overlay.addEventListener('click', closeEditModal);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key >= '1' && e.key <= '9') {
+                const index = parseInt(e.key, 10) - 1;
+                if (links[index]) {
+                    window.open(links[index].url, '_blank');
+                }
+            }
+        });
+
+        renderLinks();
+    </script>
+</body>
+</html>
